@@ -4,11 +4,6 @@ FROM python:3.8-slim
 # Set working directory inside the container
 WORKDIR /app
 
-# Install libpcap and tcpdump
-RUN apt-get update && \
-    apt-get install -y libpcap-dev tcpdump && \
-    rm -rf /var/lib/apt/lists/*
-
 # Copy requirements file
 COPY requirements.txt .
 
