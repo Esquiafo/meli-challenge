@@ -1,0 +1,9 @@
+version: '3'
+services:
+  packet-sniffer:
+    build: .
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+      - SYS_PTRACE
+    privileged: true
