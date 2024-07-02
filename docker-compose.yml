@@ -1,7 +1,24 @@
 version: '3'
 services:
-  packet-sniffer:
+  capture-traffic:
     build: .
     network_mode: "host"
     ports:
-      - "80:80"
+      - "5000:5000"
+    depends_on:
+      - db
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: my_database
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
+    driver: local

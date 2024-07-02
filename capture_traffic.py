@@ -1,55 +1,63 @@
+# This import is necessary to handle DB connection Postgres
+import psycopg2
+# The package recommended for reading packets
 from scapy.all import sniff, IP
-import requests
-import datetime
 
-# Supabase credentials
-supabase_api_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2d3pidmlpZ3Nvbml3a2djeW1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTk5MDA4MTIsImV4cCI6MjAzNTQ3NjgxMn0.eDuqdrGpBvsq2ToPabJm7ZTONYKU_Y0VYA_xQhfK04c'
-supabase_auth_token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2d3pidmlpZ3Nvbml3a2djeW1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTk5MDA4MTIsImV4cCI6MjAzNTQ3NjgxMn0.eDuqdrGpBvsq2ToPabJm7ZTONYKU_Y0VYA_xQhfK04c'
+# DB Connection
+conn = psycopg2.connect(
+    dbname='my_database',
+    user='postgres',
+    password='mysecretpassword',
+    host='localhost',
+    port='5432'
+)
+cursor = conn.cursor()
 
-# Supabase API endpoint
-api_url = 'https://lvwzbviigsoniwkgcymf.supabase.co/rest/v1/packets'
-headers = {
-    'apikey': supabase_api_key,
-    'Authorization': f'Bearer {supabase_auth_token}',
-    'Content-Type': 'application/json'
-}
+# DB SQL Injection Database
+create_table_query = '''
+CREATE TABLE IF NOT EXISTS packets (
+    id SERIAL PRIMARY KEY,
+    protocol INTEGER NOT NULL,
+    source_ip VARCHAR(50) NOT NULL,
+    destination_ip VARCHAR(50) NOT NULL
+);
+'''
+cursor.execute(create_table_query)
+conn.commit()
 
-# Global variables for statistics
-total_paquetes = 0
-tipo_protocolo = {}
-origen_contador = {}
-destino_contador = {}
+# Function to save values in DB
+def process_packet(packet):
+    
+    # Validate if IP exist in packet
+    if IP in packet:
+        origin_ip = packet[IP].src
+        dst_ip = packet[IP].dst
+        protocol = packet[IP].proto
 
+        # Validate if any of these local IPs exist; if matched, do nothing and exit the function
+        if origin_ip in ('192.168.0.62', '127.0.0.1', '192.168.0.1', '192.168.0.255') and dst_ip in ('127.0.0.1', '192.168.0.62', '192.168.0.255', '192.168.0.1'):
+            return
 
-def process_paquete(paquete):
-    global total_paquetes, tipo_protocolo, origen_contador, destino_contador
-
-    if IP in paquete:
-        total_paquetes += 1
-
-        # Extract packet details
-        protocolo = paquete[IP].proto
-        origen_ip = paquete[IP].src
-        destino_ip = paquete[IP].dst
-
-        # Prepare payload for insertion
+        # Build an object to save it into DB
         payload = {
-            'timestamp': datetime.datetime.now().isoformat(),  # Correct usage of datetime
-            'protocol': protocolo,
-            'source_ip': origen_ip,
-            'destination_ip': destino_ip
+            'protocol': protocol,
+            'source_ip': origin_ip,
+            'destination_ip': dst_ip
         }
 
-        # Send POST request to insert packet data
-        try:
-            response = requests.post(api_url, headers=headers, json=payload)
-            if response.status_code == 201:
-                print(f"Packet data inserted successfully: {payload}")
-            else:
-                print(f"Failed to insert packet data. Status code: {response.status_code}")
-        except Exception as e:
-            print(f"Error inserting packet data: {e}")
+        # Create Query that matchs table in DB
+        insert_query = '''
+        INSERT INTO packets (protocol, source_ip, destination_ip)
+        VALUES (%s, %s, %s);
+        '''
 
-# Start capturing packets
-print("Starting packet capture...")
-sniff(iface="lo", prn=process_paquete, store=0)
+        # Inject query with values into DB
+        cursor.execute(insert_query, (payload['protocol'], payload['source_ip'], payload['destination_ip']))
+        conn.commit()
+
+        # Print in console the new obj that is saved in DB
+        print(f"Packet data inserted successfully: {payload}")
+
+# Start capturing
+sniff(iface="enp0s3", prn=process_packet, store=0)
+
