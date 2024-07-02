@@ -3,7 +3,5 @@ services:
   packet-sniffer:
     build: .
     network_mode: "host"
-    cap_add:
-      - NET_ADMIN
-      - SYS_PTRACE
-    privileged: true
+    ports:
+      - "80:80"

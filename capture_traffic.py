@@ -52,4 +52,4 @@ def process_paquete(paquete):
 
 # Start capturing packets
 print("Starting packet capture...")
-sniff(iface="enp0s3", prn=process_paquete, store=0)
+sniff(iface="lo", prn=process_paquete, store=0)
