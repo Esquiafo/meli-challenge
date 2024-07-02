@@ -13,17 +13,6 @@ conn = psycopg2.connect(
 )
 cursor = conn.cursor()
 
-# DB SQL Injection Database
-create_table_query = '''
-CREATE TABLE IF NOT EXISTS packets (
-    id SERIAL PRIMARY KEY,
-    protocol INTEGER NOT NULL,
-    source_ip VARCHAR(50) NOT NULL,
-    destination_ip VARCHAR(50) NOT NULL
-);
-'''
-cursor.execute(create_table_query)
-conn.commit()
 
 # Function to save values in DB
 def process_packet(packet):
@@ -59,5 +48,5 @@ def process_packet(packet):
         print(f"Packet data inserted successfully: {payload}")
 
 # Start capturing
-sniff(iface="enp0s3", prn=process_packet, store=0)
+sniff(iface="lo", prn=process_packet, store=0)
 
