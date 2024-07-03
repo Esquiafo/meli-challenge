@@ -3,7 +3,7 @@ const { Pool } = pkg;
 
 export const pool = new Pool({
     user: 'postgres',
-    host: 'localhost',
+    host: 'meli-db',
     database: 'my_database',
     password: 'mysecretpassword',
     port: 5432,
