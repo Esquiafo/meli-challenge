@@ -1,16 +1,7 @@
-version: '3'
 services:
-  capture-traffic:
-    build: .
-    network_mode: "host"
-    depends_on:
-      - db
-    ports:
-      - "5000:5000"
-
   db:
+    container_name: meli-db
     image: postgres:latest
-    restart: always
     ports:
       - "5432:5432"
     environment:
@@ -19,21 +10,35 @@ services:
       POSTGRES_PASSWORD: mysecretpassword
     volumes:
       - ./db-init:/docker-entrypoint-initdb.d
-
-  backend:
-    build: ./backend
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -q -d my_database -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   frontend:
+    container_name: meli-frontend
     build: ./frontend
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      db:
+        condition: service_healthy
 
-volumes:
-  postgres-data:
-    driver: local
+  backend:
+    container_name: meli-backend
+    build: ./backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  microservice:
+    container_name: meli-traffic
+    build: ./
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy

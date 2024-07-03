@@ -1,18 +1,18 @@
-# Use Python base image
-FROM python:3.8-slim
+FROM python:3.8
 
-# Set working directory inside the container
+# Install iproute2 and other dependencies
+RUN apt-get update && \
+    apt-get install -y iproute2 && \
+    apt-get clean
+
+# Set working directory
 WORKDIR /app
 
-# Copy requirements file
-COPY requirements.txt .
+# Copy your Python script and other necessary files
+COPY . .
 
-# Install Python dependencies including requests
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the script into the container
-COPY capture_traffic.py .
-
-# Set the entry point
+# Command to run your Python script
 CMD ["python", "capture_traffic.py"]
-
