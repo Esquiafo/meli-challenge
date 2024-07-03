@@ -17,7 +17,6 @@ const Destination = () => {
                 setLoading(false);
             }
         };
-
         fetchData();
     }, []);
 
@@ -28,14 +27,13 @@ const Destination = () => {
     if (error) {
         return <p>Error: {error}</p>;
     }
-
     return (
         <div>
             <h3>Top 5 Destination IPs:</h3>
             <ul>
                 {data.map((item, index) => (
                     <li key={index}>
-                        {item.destination_ip} - {item.count}
+                        {item.destination_ip} - Count: {item.count} - kB: {item.total_kb}
                     </li>
                 ))}
             </ul>

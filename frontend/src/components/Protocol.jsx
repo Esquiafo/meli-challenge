@@ -11,6 +11,7 @@ const Protocol = () => {
             try {
                 const responseData = await fetchProtocolData();
                 setData(responseData);
+                console.log(data)
                 setLoading(false);
             } catch (error) {
                 setError(error.message || 'Error fetching data');
@@ -35,7 +36,7 @@ const Protocol = () => {
             <ul>
                 {data.map((item, index) => (
                     <li key={index}>
-                        {item.protocol} - {item.count}
+                        {item.protocol} - Count: {item.count} - kB: {item.total_kb}
                     </li>
                 ))}
             </ul>

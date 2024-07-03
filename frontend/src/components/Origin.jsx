@@ -35,7 +35,7 @@ const Origin = () => {
             <ul>
                 {data.map((item, index) => (
                     <li key={index}>
-                        {item.source_ip} - {item.count}
+                        {item.source_ip} - Count: {item.count} - kB: {item.total_kb}
                     </li>
                 ))}
             </ul>
